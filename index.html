@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>热点工作台 · Demo</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --panel: #ffffff;
+      --border: #e4e7ec;
+      --text: #1f2933;
+      --muted: #6b7280;
+      --primary: #2f6fed;
+      --primary-soft: #e8f0fe;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+    header h1 { margin: 0; font-size: 18px; }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      padding: 16px 24px 0;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      min-width: 120px;
+    }
+    .stat-card .num { font-size: 22px; font-weight: 600; }
+    .stat-card .label { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    .filters {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      padding: 16px 24px;
+    }
+    .filters .field { display: flex; flex-direction: column; gap: 4px; }
+    .filters label { font-size: 12px; color: var(--muted); }
+    .filters select, .filters input {
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      font-size: 13px;
+      min-width: 150px;
+    }
+    .filters button {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .layout { display: flex; gap: 16px; padding: 0 24px 24px; align-items: flex-start; }
+    .list-wrap { flex: 1; min-width: 0; }
+
+    table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { background: #fafbfc; color: var(--muted); font-weight: 600; font-size: 12px; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: var(--primary-soft); }
+    tbody tr.active { background: var(--primary-soft); }
+    td .title { font-weight: 600; }
+    td .summary { color: var(--muted); font-size: 12px; margin-top: 4px; max-width: 360px; }
+
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; background: #eef1f5; color: #475467; margin: 0 4px 4px 0; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+    .badge.pending { background: #fff4e5; color: #b45309; }
+    .badge.todo { background: #e8f0fe; color: #2f6fed; }
+    .badge.ignored { background: #f1f1f1; color: #9aa0a6; }
+
+    .detail {
+      width: 340px;
+      flex-shrink: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      position: sticky;
+      top: 16px;
+    }
+    .detail h2 { margin: 0 0 4px; font-size: 16px; }
+    .detail .meta { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+    .detail .row { margin-bottom: 12px; }
+    .detail .row .k { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .detail a { color: var(--primary); }
+    .detail .empty { color: var(--muted); text-align: center; padding: 40px 0; }
+    .detail button.primary {
+      margin-top: 8px; width: 100%; padding: 9px; border: none; border-radius: 6px;
+      background: var(--primary); color: #fff; cursor: pointer; font-size: 13px;
+    }
+    .empty-row td { text-align: center; color: var(--muted); padding: 32px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>热点工作台</h1>
+    <p>统一查看与初筛多源热点 · Demo</p>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="filters">
+    <div class="field">
+      <label>来源</label>
+      <select id="f-source"><option value="">全部</option></select>
+    </div>
+    <div class="field">
+      <label>时间范围</label>
+      <select id="f-time">
+        <option value="">全部</option>
+        <option value="1">近 24 小时</option>
+        <option value="3">近 3 天</option>
+        <option value="7">近 7 天</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>判断状态</label>
+      <select id="f-status">
+        <option value="">全部</option>
+        <option value="pending">待评估</option>
+        <option value="todo">可跟进</option>
+        <option value="ignored">忽略</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>关键词搜索</label>
+      <input id="f-keyword" type="text" placeholder="标题 / 关键词" />
+    </div>
+    <button id="reset">重置</button>
+  </section>
+
+  <div class="layout">
+    <div class="list-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>标题 / 摘要</th>
+            <th>来源</th>
+            <th>抓取时间</th>
+            <th>关键词</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <aside class="detail" id="detail">
+      <div class="empty">点击左侧任意热点查看详情</div>
+    </aside>
+  </div>
+
+  <script>
+    const STATUS_LABEL = { pending: "待评估", todo: "可跟进", ignored: "忽略" };
+
+    // 演示数据
+    const HOTSPOTS = [
+      { id: 1, title: "比特币现货 ETF 单日净流入创历史新高", source: "CryptoPanic", fetchedAt: "2026-06-24T08:20:00", keywords: ["Bitcoin ETF", "净流入", "机构"], summary: "多只现货 ETF 单日净流入合计超 12 亿美元，市场情绪转向乐观。", url: "https://example.com/btc-etf", volume: "48,000", trend: "↑ 320%", status: "todo" },
+      { id: 2, title: "Google Trends：'AI agent' 搜索量持续攀升", source: "Google Trends", fetchedAt: "2026-06-24T06:05:00", keywords: ["AI agent", "自动化"], summary: "过去一周 'AI agent' 相关搜索环比增长明显，长尾词机会较多。", url: "https://example.com/ai-agent", volume: "90,500", trend: "↑ 75%", status: "pending" },
+      { id: 3, title: "Semrush：'staking rewards' 关键词竞争度下降", source: "Semrush", fetchedAt: "2026-06-22T15:40:00", keywords: ["staking", "rewards", "收益"], summary: "竞争度由高转中，存在内容卡位窗口期。", url: "https://example.com/staking", volume: "22,100", trend: "↑ 18%", status: "pending" },
+      { id: 4, title: "Ahrefs：竞品博客新增 12 篇 Layer2 主题文章", source: "Ahrefs", fetchedAt: "2026-06-21T10:10:00", keywords: ["Layer2", "竞品分析"], summary: "竞品集中布局 Layer2 选题，建议评估差异化角度。", url: "https://example.com/layer2", volume: "15,300", trend: "→ 持平", status: "ignored" },
+      { id: 5, title: "CryptoPanic：监管新闻引发市场短期波动", source: "CryptoPanic", fetchedAt: "2026-06-24T03:30:00", keywords: ["监管", "合规"], summary: "某地区监管表态导致情绪波动，适合做解读型内容。", url: "https://example.com/regulation", volume: "31,200", trend: "↑ 56%", status: "todo" },
+      { id: 6, title: "Google Trends：'meme coin' 热度回落", source: "Google Trends", fetchedAt: "2026-06-19T12:00:00", keywords: ["meme coin"], summary: "搜索热度自高点回落，短期内容价值下降。", url: "https://example.com/meme", volume: "60,000", trend: "↓ 40%", status: "ignored" },
+    ];
+
+    const NOW = new Date("2026-06-24T12:00:00");
+
+    const els = {
+      rows: document.getElementById("rows"),
+      detail: document.getElementById("detail"),
+      stats: document.getElementById("stats"),
+      source: document.getElementById("f-source"),
+      time: document.getElementById("f-time"),
+      status: document.getElementById("f-status"),
+      keyword: document.getElementById("f-keyword"),
+    };
+
+    let activeId = null;
+
+    // 来源下拉
+    [...new Set(HOTSPOTS.map(h => h.source))].forEach(s => {
+      const o = document.createElement("option");
+      o.value = s; o.textContent = s;
+      els.source.appendChild(o);
+    });
+
+    function fmtTime(iso) {
+      return iso.replace("T", " ").slice(0, 16);
+    }
+
+    function filtered() {
+      const src = els.source.value;
+      const days = els.time.value ? Number(els.time.value) : null;
+      const st = els.status.value;
+      const kw = els.keyword.value.trim().toLowerCase();
+
+      return HOTSPOTS.filter(h => {
+        if (src && h.source !== src) return false;
+        if (st && h.status !== st) return false;
+        if (days) {
+          const diff = (NOW - new Date(h.fetchedAt)) / 86400000;
+          if (diff > days) return false;
+        }
+        if (kw) {
+          const hay = (h.title + " " + h.keywords.join(" ")).toLowerCase();
+          if (!hay.includes(kw)) return false;
+        }
+        return true;
+      });
+    }
+
+    function renderStats(list) {
+      const by = s => HOTSPOTS.filter(h => h.status === s).length;
+      const cards = [
+        { num: HOTSPOTS.length, label: "热点总数" },
+        { num: by("pending"), label: "待评估" },
+        { num: by("todo"), label: "可跟进" },
+        { num: list.length, label: "当前筛选结果" },
+      ];
+      els.stats.innerHTML = cards.map(c =>
+        `<div class="stat-card"><div class="num">${c.num}</div><div class="label">${c.label}</div></div>`
+      ).join("");
+    }
+
+    function renderRows(list) {
+      if (!list.length) {
+        els.rows.innerHTML = `<tr class="empty-row"><td colspan="5">没有符合条件的热点</td></tr>`;
+        return;
+      }
+      els.rows.innerHTML = list.map(h => `
+        <tr data-id="${h.id}" class="${h.id === activeId ? "active" : ""}">
+          <td>
+            <div class="title">${h.title}</div>
+            <div class="summary">${h.summary}</div>
+          </td>
+          <td>${h.source}</td>
+          <td>${fmtTime(h.fetchedAt)}</td>
+          <td>${h.keywords.map(k => `<span class="tag">${k}</span>`).join("")}</td>
+          <td><span class="badge ${h.status}">${STATUS_LABEL[h.status]}</span></td>
+        </tr>
+      `).join("");
+
+      els.rows.querySelectorAll("tr[data-id]").forEach(tr => {
+        tr.addEventListener("click", () => selectHotspot(Number(tr.dataset.id)));
+      });
+    }
+
+    function renderDetail(h) {
+      if (!h) {
+        els.detail.innerHTML = `<div class="empty">点击左侧任意热点查看详情</div>`;
+        return;
+      }
+      els.detail.innerHTML = `
+        <h2>${h.title}</h2>
+        <div class="meta">${h.source} · ${fmtTime(h.fetchedAt)}</div>
+        <div class="row"><div class="k">摘要</div><div>${h.summary}</div></div>
+        <div class="row"><div class="k">关键词</div><div>${h.keywords.map(k => `<span class="tag">${k}</span>`).join("")}</div></div>
+        <div class="row"><div class="k">搜索量 / 趋势</div><div>${h.volume} · ${h.trend}</div></div>
+        <div class="row"><div class="k">判断状态</div><div><span class="badge ${h.status}">${STATUS_LABEL[h.status]}</span></div></div>
+        <div class="row"><div class="k">原始链接</div><div><a href="${h.url}" target="_blank" rel="noopener">查看来源 ↗</a></div></div>
+        <button class="primary">创建内容任务</button>
+      `;
+      els.detail.querySelector("button.primary").addEventListener("click", () => {
+        alert(`（Demo）已为「${h.title}」创建内容任务`);
+      });
+    }
+
+    function selectHotspot(id) {
+      activeId = id;
+      render();
+    }
+
+    function render() {
+      const list = filtered();
+      renderStats(list);
+      renderRows(list);
+      renderDetail(HOTSPOTS.find(h => h.id === activeId));
+    }
+
+    ["change", "input"].forEach(ev => {
+      els.source.addEventListener(ev, render);
+      els.time.addEventListener(ev, render);
+      els.status.addEventListener(ev, render);
+      els.keyword.addEventListener(ev, render);
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      els.source.value = ""; els.time.value = ""; els.status.value = ""; els.keyword.value = "";
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
