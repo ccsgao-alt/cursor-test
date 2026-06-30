@@ -21,7 +21,7 @@ export function DetailPanel({ hotspot }: Props) {
   return (
     <aside className="detail">
       <h2>{hotspot.title}</h2>
-      <div className="meta">{hotspot.source} · {fmtTime(hotspot.fetchedAt)}</div>
+      <div className="meta">{hotspot.sources.join(" / ")} · {fmtTime(hotspot.fetchedAt)}</div>
 
       <div className="row">
         <div className="k">摘要</div>
@@ -32,7 +32,7 @@ export function DetailPanel({ hotspot }: Props) {
         <div>{hotspot.keywords.map((k) => <span className="tag" key={k}>{k}</span>)}</div>
       </div>
       <div className="row">
-        <div className="k">搜索量 / 趋势</div>
+        <div className="k">热度 / 趋势</div>
         <div>{hotspot.volume} · {hotspot.trend}</div>
       </div>
       <div className="row">
@@ -40,8 +40,14 @@ export function DetailPanel({ hotspot }: Props) {
         <div><span className={`badge ${hotspot.status}`}>{STATUS_LABEL[hotspot.status]}</span></div>
       </div>
       <div className="row">
-        <div className="k">原始链接</div>
-        <div><a href={hotspot.url} target="_blank" rel="noopener">查看来源 ↗</a></div>
+        <div className="k">来源保留</div>
+        <div>
+          {hotspot.sourceRecords.map((record) => (
+            <div key={`${record.source}:${record.sourceItemId}`}>
+              {record.source} · {fmtTime(record.fetchedAt)} · <a href={record.url} target="_blank" rel="noopener">查看来源 ↗</a>
+            </div>
+          ))}
+        </div>
       </div>
 
       <button

@@ -5,8 +5,8 @@ interface Props {
   hotspots: Hotspot[];
   loading: boolean;
   error: string | null;
-  activeId: number | null;
-  onSelect: (id: number) => void;
+  activeId: string | null;
+  onSelect: (id: string) => void;
 }
 
 function fmtTime(iso: string): string {
@@ -32,7 +32,7 @@ export function HotspotTable({ hotspots, loading, error, activeId, onSelect }: P
           <div className="title">{h.title}</div>
           <div className="summary">{h.summary}</div>
         </td>
-        <td>{h.source}</td>
+        <td>{h.sources.join(" / ")}</td>
         <td>{fmtTime(h.fetchedAt)}</td>
         <td>{h.keywords.map((k) => <span className="tag" key={k}>{k}</span>)}</td>
         <td><span className={`badge ${h.status}`}>{STATUS_LABEL[h.status]}</span></td>

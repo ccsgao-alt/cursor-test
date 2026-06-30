@@ -1,32 +1,40 @@
-# 热点工作台（XMA-9）
+# 热点工作台（XMA-8 / XMA-9）
 
-统一热点工作台的列表浏览与初筛能力。React + Vite + TypeScript 前端,数据走本地 mock 接口层(`src/api/`),后续接入真实数据源(XMA-8)时仅替换 api 层即可,组件无需改动。
+统一热点工作台的列表浏览、数据源接入与基础聚合能力。React + Vite + TypeScript 前端，当前在 `src/api/` 内实现了可替换的数据源适配层、失败重试策略、统一字段映射与聚合存储；后续接入真实后端或正式 API 时，可保持页面组件不变，仅替换数据源拉取实现。
 
-## 功能
+## 当前 MVP 能力
 
-- **热点列表**:标题、来源、抓取时间、关键词、摘要等核心字段
-- **筛选**:按来源、时间范围、判断状态筛选 + 关键词搜索(联动)
-- **状态**:加载中 / 报错 / 空结果
-- **统计卡片**:热点总数、待评估、可跟进、当前筛选结果
-- **详情面板**:点击行查看完整信息,并可(演示)创建内容任务
+- **已接入数据源**：Google Trends、CryptoPanic
+- **统一热点结构**：标题、来源、抓取时间、关键词、摘要、热度、趋势、状态、来源记录
+- **基础聚合**：按标准化 `dedupeKey` 去重，合并多来源关键词与来源记录
+- **来源保留**：聚合后仍保留每条热点的原始来源明细
+- **拉取策略**：
+  - Google Trends：30 分钟刷新一次
+  - CryptoPanic：10 分钟刷新一次
+  - 两个数据源均为 3 次重试 + 线性退避
 
 ## 运行
 
 ```bash
 npm install
-npm run dev      # 本地开发
-npm run build    # 类型检查 + 生产构建
+npm run dev
+npm run build
 ```
 
 ## 结构
 
-```
+```text
 src/
-  api/hotspots.ts      # mock 接口层(模拟延迟与服务端筛选)
-  data/hotspots.ts     # 演示数据
-  types.ts             # 类型定义
-  components/          # StatCards / Filters / HotspotTable / DetailPanel
-  App.tsx              # 页面容器与状态管理
+  api/hotspots.ts         # 数据源拉取、失败重试、统一映射、聚合存储
+  data/sourceFixtures.ts  # Google Trends / CryptoPanic 模拟原始返回
+  types.ts                # 统一热点结构、源数据结构、策略定义
+  components/             # 列表、筛选、统计、详情
+  App.tsx                 # 页面容器与状态管理
 ```
 
-> `prototype/index.html` 为最初的单文件静态原型,保留作参考。
+## 后续接真实源时建议
+
+- 将 `sourceFixtures.ts` 替换为真实 API 调用
+- 把当前内存 store 下沉到后端数据库或缓存层
+- 将 `dedupeKey` 升级为更稳健的语义聚类或关键词归一化规则
+- 为失败重试增加可观测性与错误上报

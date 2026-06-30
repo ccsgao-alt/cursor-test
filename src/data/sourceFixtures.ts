@@ -1,0 +1,73 @@
+import type { CryptoPanicItem, GoogleTrendsItem } from "../types";
+
+export const GOOGLE_TRENDS_FIXTURES: GoogleTrendsItem[] = [
+  {
+    id: "gt-ai-agent",
+    keyword: "AI agent",
+    traffic: 90500,
+    trendDelta: 75,
+    fetchedAt: "2026-06-24T06:05:00Z",
+    articleUrl: "https://trends.google.com/trends/explore?q=AI%20agent",
+    relatedQueries: ["AI agent", "自动化", "agent workflow"],
+    summary: "过去一周 AI agent 相关搜索快速抬升，伴随多组自动化与工作流长尾词同步上涨。",
+    geo: "Global",
+  },
+  {
+    id: "gt-meme-coin",
+    keyword: "meme coin",
+    traffic: 60000,
+    trendDelta: -40,
+    fetchedAt: "2026-06-19T12:00:00Z",
+    articleUrl: "https://trends.google.com/trends/explore?q=meme%20coin",
+    relatedQueries: ["meme coin", "solana meme", "memecoin"],
+    summary: "搜索热度自高点回落，短期话题热度和可持续性同时减弱。",
+    geo: "Global",
+  },
+  {
+    id: "gt-bitcoin-etf",
+    keyword: "bitcoin etf",
+    traffic: 48200,
+    trendDelta: 68,
+    fetchedAt: "2026-06-24T08:10:00Z",
+    articleUrl: "https://trends.google.com/trends/explore?q=bitcoin%20etf",
+    relatedQueries: ["Bitcoin ETF", "btc etf inflow", "现货 ETF"],
+    summary: "Bitcoin ETF 相关搜索在资金净流入带动下持续升温，机构关注度明显提升。",
+    geo: "US",
+  },
+];
+
+export const CRYPTOPANIC_FIXTURES: CryptoPanicItem[] = [
+  {
+    id: "cp-btc-etf-inflow",
+    title: "比特币现货 ETF 单日净流入创历史新高",
+    url: "https://cryptopanic.com/news/bitcoin-etf-inflows/",
+    publishedAt: "2026-06-24T08:20:00Z",
+    votes: 428,
+    sentiment: "positive",
+    currencies: ["BTC", "ETH"],
+    tags: ["Bitcoin ETF", "净流入", "机构"],
+    summary: "多只现货 ETF 单日净流入合计超 12 亿美元，市场情绪转向乐观。",
+  },
+  {
+    id: "cp-regulation-volatility",
+    title: "监管新闻引发市场短期波动",
+    url: "https://cryptopanic.com/news/regulation-volatility/",
+    publishedAt: "2026-06-24T03:30:00Z",
+    votes: 205,
+    sentiment: "neutral",
+    currencies: ["BTC", "SOL"],
+    tags: ["监管", "合规"],
+    summary: "某地区监管表态导致市场情绪快速波动，适合做解读型内容。",
+  },
+  {
+    id: "cp-ai-agent-token",
+    title: "AI Agent 叙事带动相关代币讨论升温",
+    url: "https://cryptopanic.com/news/ai-agent-tokens/",
+    publishedAt: "2026-06-24T07:10:00Z",
+    votes: 188,
+    sentiment: "positive",
+    currencies: ["FET", "TAO"],
+    tags: ["AI agent", "代币", "自动化"],
+    summary: "AI Agent 赛道代币与基础设施项目讨论显著增多，交易与内容关注度同步提升。",
+  },
+];
