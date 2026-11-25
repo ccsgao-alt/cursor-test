@@ -30,3 +30,16 @@ src/
 ```
 
 > `prototype/index.html` 为最初的单文件静态原型,保留作参考。
+
+## 天气预报高保真原型（XMA-20）
+
+`prototype/weather.html` 为北京天气预报界面的可评审高保真 HTML 原型,覆盖线框、视觉规范与全部交互状态。
+
+```bash
+# 浏览器直接打开文件,或：
+npx --yes serve prototype -p 4173
+# 访问 http://127.0.0.1:4173/weather.html
+# 也可用 ?state=normal|first-load|first-fail|refresh-fail|partial 等直达某一状态
+```
+
+页顶「评审态」工具栏仅用于设计评审与测试,正式前端实现时不包含该栏。

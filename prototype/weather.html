@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>北京天气 · 高保真原型（XMA-20）</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #182230;
+      --muted: #526071;
+      --primary: #175cd3;
+      --primary-hover: #134bb3;
+      --error: #b42318;
+      --border: #e4e7ec;
+      --skeleton: #e8ecf1;
+      --radius: 16px;
+      --page-pad-h5: 16px;
+      --page-pad-web: 24px;
+      --module-gap: 16px;
+      --max-width: 960px;
+      --focus-ring: 0 0 0 3px rgba(23, 92, 211, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--module-gap) var(--page-pad-h5) 32px;
+    }
+
+    @media (min-width: 768px) {
+      .page { padding-left: var(--page-pad-web); padding-right: var(--page-pad-web); }
+    }
+
+  /* Review toolbar — prototype only */
+    .review-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #1d2939;
+      color: #f9fafb;
+      padding: 8px 12px;
+      font-size: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .review-bar span { opacity: 0.85; margin-right: 4px; }
+    .review-bar button {
+      font-size: 11px;
+      padding: 4px 8px;
+      border: 1px solid #475467;
+      border-radius: 6px;
+      background: #344054;
+      color: #fff;
+      cursor: pointer;
+    }
+    .review-bar button:hover { background: #475467; }
+    .review-bar button[aria-pressed="true"] {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: var(--module-gap);
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .mock-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 2px 10px;
+      font-size: 14px;
+      color: var(--muted);
+      background: #eef2f6;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .btn-refresh {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px 16px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--primary);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .btn-refresh:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: #f0f6ff;
+    }
+    .btn-refresh:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+    .btn-refresh:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .banner {
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: var(--module-gap);
+      font-size: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .banner.error {
+      background: #fef3f2;
+      color: var(--error);
+      border: 1px solid #fecdca;
+    }
+    .banner.warn {
+      background: #fffaeb;
+      color: #b54708;
+      border: 1px solid #fedf89;
+    }
+    .banner.success {
+      background: #ecfdf3;
+      color: #027a48;
+      border: 1px solid #abefc6;
+    }
+    .banner[hidden] { display: none !important; }
+
+    .btn-primary {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px 18px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-primary:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: var(--module-gap);
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    }
+
+    .section-title {
+      margin: 0 0 var(--module-gap);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .current-city {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .current-main {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .weather-icon {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      line-height: 1;
+    }
+    .weather-icon[hidden] { display: none !important; }
+
+    .condition-text {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .temp-now {
+      font-size: 48px;
+      font-weight: 600;
+      line-height: 1.1;
+      margin: 4px 0 12px;
+    }
+
+    .mock-time {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .skeleton-block {
+      background: linear-gradient(90deg, var(--skeleton) 25%, #f3f5f8 50%, var(--skeleton) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .sk-line { height: 16px; margin-bottom: 10px; width: 60%; }
+    .sk-line.wide { width: 85%; }
+    .sk-line.short { width: 40%; }
+    .sk-temp { height: 48px; width: 120px; margin: 12px 0; }
+
+    .loading-hint {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .forecast-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    @media (min-width: 768px) {
+      .forecast-list {
+        flex-direction: row;
+        gap: var(--module-gap);
+      }
+      .forecast-item {
+        flex: 1;
+      }
+    }
+
+    .forecast-item {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 4px 12px;
+      align-items: center;
+    }
+
+    @media (min-width: 768px) {
+      .forecast-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+
+    .forecast-item:last-child { border-bottom: none; }
+    @media (min-width: 768px) {
+      .forecast-item:last-child { border-bottom: 1px solid var(--border); }
+    }
+
+    .forecast-day {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .forecast-condition {
+      font-size: 16px;
+      color: var(--text);
+      grid-column: 2;
+      grid-row: 1;
+      text-align: right;
+    }
+    @media (min-width: 768px) {
+      .forecast-condition { grid-column: unset; grid-row: unset; text-align: left; }
+    }
+
+    .forecast-temp {
+      font-size: 14px;
+      color: var(--muted);
+      grid-column: 1 / -1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 24px 16px;
+    }
+    .empty-state p {
+      margin: 0 0 16px;
+      color: var(--error);
+      font-size: 16px;
+    }
+
+    .no-data { color: var(--muted); }
+
+    .disclaimer {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <nav class="review-bar" aria-label="原型状态切换（仅评审用）">
+    <span>评审态：</span>
+    <button type="button" data-scenario="first-load" aria-pressed="false">首次加载</button>
+    <button type="button" data-scenario="normal" aria-pressed="true">正常</button>
+    <button type="button" data-scenario="refreshing" aria-pressed="false">刷新中</button>
+    <button type="button" data-scenario="refresh-success" aria-pressed="false">刷新成功</button>
+    <button type="button" data-scenario="first-fail" aria-pressed="false">首次失败</button>
+    <button type="button" data-scenario="refresh-fail" aria-pressed="false">刷新失败</button>
+    <button type="button" data-scenario="partial" aria-pressed="false">字段缺失</button>
+  </nav>
+
+  <main class="page" id="app">
+    <header class="page-header">
+      <div class="title-block">
+        <h1>北京天气</h1>
+        <span class="mock-badge" role="status">模拟数据</span>
+      </div>
+      <button type="button" class="btn-refresh" id="btn-refresh" aria-label="刷新天气数据">刷新</button>
+    </header>
+
+    <div class="banner error" id="banner-refresh-fail" role="alert" hidden>
+      <span>刷新失败，当前展示上次数据</span>
+      <button type="button" class="btn-primary" id="btn-re-refresh">重新刷新</button>
+    </div>
+
+    <div class="banner success" id="banner-refresh-ok" role="status" aria-live="polite" hidden>
+      刷新成功
+    </div>
+
+    <section class="card" id="current-card" aria-labelledby="current-heading">
+      <h2 class="section-title" id="current-heading">当前天气</h2>
+      <div id="current-content"></div>
+    </section>
+
+    <section class="card" id="forecast-card" aria-labelledby="forecast-heading">
+      <h2 class="section-title" id="forecast-heading">3 天天气预报（含今天）</h2>
+      <div class="forecast-list" id="forecast-list"></div>
+    </section>
+
+    <p class="disclaimer">仅用于协作演练，不作为真实天气决策依据</p>
+
+    <p class="sr-only" id="live-region" aria-live="polite" aria-atomic="true"></p>
+  </main>
+
+  <script>
+    const ICONS = {
+      晴: '☀️',
+      多云: '⛅',
+      阴: '☁️',
+      雨: '🌧️',
+      雪: '❄️',
+    };
+
+    function beijingNow() {
+      return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+    }
+
+    function formatMockTime(d) {
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const h = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${m}月${day}日 ${h}:${min}`;
+    }
+
+    function formatForecastDate(d, label) {
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      return `${label} ${m}/${day}`;
+    }
+
+    function fullMock(at) {
+      const base = new Date(at);
+      const days = [0, 1, 2].map((offset) => {
+        const d = new Date(base);
+        d.setDate(d.getDate() + offset);
+        return d;
+      });
+      const labels = ['今天', '明天', '后天'];
+      const conditions = ['晴', '多云', '阴'];
+      const highs = [10, 9, 7];
+      const lows = [2, 1, 0];
+      return {
+        city: '北京',
+        condition: '晴',
+        temp: 8,
+        mockTime: base,
+        forecast: days.map((d, i) => ({
+          date: d,
+          dayLabel: labels[i],
+          condition: conditions[i],
+          high: highs[i],
+          low: lows[i],
+        })),
+      };
+    }
+
+    function partialMock(at) {
+      const data = fullMock(at);
+      data.condition = null;
+      data.temp = null;
+      data.forecast[1].condition = null;
+      data.forecast[2].high = null;
+      data.mockTime = null;
+      return data;
+    }
+
+    const state = {
+      scenario: 'normal',
+      phase: 'idle',
+      data: null,
+      lastGood: null,
+      lastGoodTime: null,
+    };
+
+    const els = {
+      current: document.getElementById('current-content'),
+      forecast: document.getElementById('forecast-list'),
+      refresh: document.getElementById('btn-refresh'),
+      reRefresh: document.getElementById('btn-re-refresh'),
+      failBanner: document.getElementById('banner-refresh-fail'),
+      okBanner: document.getElementById('banner-refresh-ok'),
+      live: document.getElementById('live-region'),
+    };
+
+    function announce(msg) {
+      els.live.textContent = '';
+      requestAnimationFrame(() => { els.live.textContent = msg; });
+    }
+
+    function renderConditionText(condition) {
+      if (condition == null || condition === '') {
+        return '<span class="no-data">暂无数据</span>';
+      }
+      return `<span class="condition-text">${condition}</span>`;
+    }
+
+    function renderTemp(value) {
+      if (value == null || value === '') {
+        return '<span class="no-data temp-now">暂无数据</span>';
+      }
+      return `<p class="temp-now">${value}℃</p>`;
+    }
+
+    function renderSkeleton() {
+      els.current.innerHTML = `
+        <div class="skeleton-block sk-line short"></div>
+        <div class="skeleton-block sk-line wide"></div>
+        <div class="skeleton-block sk-temp"></div>
+        <div class="skeleton-block sk-line"></div>
+        <p class="loading-hint" role="status">天气加载中…</p>
+      `;
+      els.forecast.innerHTML = [1, 2, 3].map(() => `
+        <div class="forecast-item">
+          <div class="skeleton-block sk-line short"></div>
+          <div class="skeleton-block sk-line" style="width:50%"></div>
+        </div>
+      `).join('');
+    }
+
+    function renderFirstFail() {
+      els.current.innerHTML = `
+        <div class="empty-state">
+          <p role="alert">天气加载失败，请重试</p>
+          <button type="button" class="btn-primary" id="btn-retry-first">重试</button>
+        </div>
+      `;
+      document.getElementById('btn-retry-first').addEventListener('click', () => {
+        state.scenario = 'normal';
+        state.phase = 'loading';
+        syncScenarioButtons();
+        runLoad(true);
+      });
+      els.forecast.innerHTML = `
+        <div class="empty-state"><p class="no-data" style="color:var(--muted)">—</p></div>
+      `;
+    }
+
+    function renderCurrent(data) {
+      const timeStr = data.mockTime
+        ? `模拟数据时间：${formatMockTime(data.mockTime)}`
+        : '模拟数据时间：暂无数据';
+      const showIcon = data.condition != null && data.condition !== '';
+      els.current.innerHTML = `
+        <p class="current-city">${data.city || '北京'}</p>
+        <div class="current-main">
+          ${showIcon ? `<span class="weather-icon" aria-hidden="true">${ICONS[data.condition] || '·'}</span>` : ''}
+          <div>${renderConditionText(data.condition)}</div>
+        </div>
+        ${renderTemp(data.temp)}
+        <p class="mock-time">${timeStr}</p>
+      `;
+    }
+
+    function renderForecast(forecast) {
+      els.forecast.innerHTML = forecast.map((row) => {
+        const cond = row.condition == null || row.condition === ''
+          ? '<span class="no-data">暂无数据</span>'
+          : row.condition;
+        const high = row.high != null ? `最高 ${row.high}℃` : '最高 暂无数据';
+        const low = row.low != null ? `最低 ${row.low}℃` : '最低 暂无数据';
+        const day = row.dayLabel && row.date
+          ? formatForecastDate(row.date, row.dayLabel)
+          : '<span class="no-data">暂无数据</span>';
+        return `
+          <article class="forecast-item">
+            <div class="forecast-day">${day}</div>
+            <div class="forecast-condition">${cond}</div>
+            <div class="forecast-temp">${high} / ${low}</div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function updateChrome() {
+      const loading = state.phase === 'loading' && !state.lastGood;
+      const refreshing = state.phase === 'loading' && !!state.lastGood;
+      const firstLoadScenario = state.scenario === 'first-load';
+
+      els.refresh.disabled = loading || refreshing || firstLoadScenario;
+      if (refreshing) {
+        els.refresh.textContent = '刷新中…';
+      } else {
+        els.refresh.textContent = '刷新';
+      }
+
+      els.failBanner.hidden = state.scenario !== 'refresh-fail' || state.phase !== 'idle';
+      els.okBanner.hidden = state.scenario !== 'refresh-success' || state.phase !== 'idle';
+    }
+
+    function applyScenarioView() {
+      updateChrome();
+      if (state.scenario === 'first-load' && state.phase === 'loading') {
+        renderSkeleton();
+        return;
+      }
+      if (state.scenario === 'first-fail' && !state.data) {
+        renderFirstFail();
+        return;
+      }
+      if (state.data) {
+        renderCurrent(state.data);
+        renderForecast(state.data.forecast);
+      }
+    }
+
+    function delay(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+
+    async function mockFetch(kind) {
+      await delay(800);
+      if (kind === 'fail') throw new Error('network');
+      if (kind === 'partial') return partialMock(beijingNow());
+      return fullMock(beijingNow());
+    }
+
+    async function runLoad(isRetry) {
+      const failFirst = state.scenario === 'first-fail' && !isRetry && !state.lastGood;
+      const failRefresh = state.scenario === 'refresh-fail' && state.lastGood;
+      const partial = state.scenario === 'partial';
+
+      state.phase = 'loading';
+      updateChrome();
+      if (!state.lastGood) renderSkeleton();
+
+      try {
+        const kind = failFirst || failRefresh ? 'fail' : partial ? 'partial' : 'ok';
+        const data = await mockFetch(kind);
+        if (failRefresh) throw new Error('refresh fail');
+        state.data = data;
+        state.lastGood = JSON.parse(JSON.stringify(data));
+        state.lastGoodTime = data.mockTime;
+        state.phase = 'idle';
+        if (state.scenario === 'refresh-success') {
+          announce('刷新成功');
+        } else {
+          announce('天气数据已加载');
+        }
+        applyScenarioView();
+      } catch {
+        state.phase = 'idle';
+        if (!state.lastGood) {
+          state.data = null;
+          renderFirstFail();
+        } else {
+          state.data = state.lastGood;
+          state.scenario = 'refresh-fail';
+          syncScenarioButtons();
+          applyScenarioView();
+          announce('刷新失败，当前展示上次数据');
+        }
+        updateChrome();
+      }
+    }
+
+    async function onRefresh() {
+      if (state.scenario === 'refresh-success') {
+        state.phase = 'loading';
+        updateChrome();
+        els.okBanner.hidden = true;
+        await delay(600);
+        const data = fullMock(beijingNow());
+        state.data = data;
+        state.lastGood = JSON.parse(JSON.stringify(data));
+        state.phase = 'idle';
+        els.okBanner.hidden = false;
+        applyScenarioView();
+        announce('刷新成功');
+        return;
+      }
+      if (state.scenario === 'refresh-fail') {
+        await runLoad(true);
+        return;
+      }
+      state.scenario = state.lastGood ? 'normal' : state.scenario;
+      state.phase = 'loading';
+      updateChrome();
+      await delay(600);
+      const data = state.scenario === 'partial' ? partialMock(beijingNow()) : fullMock(beijingNow());
+      state.data = data;
+      state.lastGood = JSON.parse(JSON.stringify(data));
+      state.phase = 'idle';
+      applyScenarioView();
+      announce('天气数据已刷新');
+    }
+
+    function setScenario(name) {
+      state.scenario = name;
+      state.phase = 'idle';
+      els.okBanner.hidden = name !== 'refresh-success';
+      els.failBanner.hidden = name !== 'refresh-fail';
+
+      if (name === 'first-load') {
+        state.data = null;
+        state.lastGood = null;
+        state.phase = 'loading';
+        renderSkeleton();
+        updateChrome();
+        return;
+      }
+
+      if (name === 'first-fail') {
+        state.data = null;
+        state.lastGood = null;
+        renderFirstFail();
+        updateChrome();
+        return;
+      }
+
+      if (name === 'refreshing') {
+        state.data = state.lastGood || fullMock(beijingNow());
+        state.lastGood = JSON.parse(JSON.stringify(state.data));
+        state.phase = 'loading';
+        renderCurrent(state.data);
+        renderForecast(state.data.forecast);
+        updateChrome();
+        return;
+      }
+
+      if (name === 'refresh-fail') {
+        state.data = state.lastGood || fullMock(beijingNow());
+        if (!state.lastGood) {
+          state.lastGood = JSON.parse(JSON.stringify(state.data));
+          state.lastGoodTime = state.data.mockTime;
+        }
+        state.data.mockTime = state.lastGoodTime || state.data.mockTime;
+        applyScenarioView();
+        return;
+      }
+
+      if (name === 'refresh-success') {
+        state.data = fullMock(beijingNow());
+        state.lastGood = JSON.parse(JSON.stringify(state.data));
+        applyScenarioView();
+        els.okBanner.hidden = false;
+        return;
+      }
+
+      if (name === 'partial') {
+        state.data = partialMock(beijingNow());
+        state.lastGood = JSON.parse(JSON.stringify(fullMock(beijingNow())));
+        applyScenarioView();
+        return;
+      }
+
+      state.data = fullMock(beijingNow());
+      state.lastGood = JSON.parse(JSON.stringify(state.data));
+      applyScenarioView();
+    }
+
+    function syncScenarioButtons() {
+      document.querySelectorAll('[data-scenario]').forEach((btn) => {
+        btn.setAttribute('aria-pressed', btn.dataset.scenario === state.scenario ? 'true' : 'false');
+      });
+    }
+
+    document.querySelectorAll('[data-scenario]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setScenario(btn.dataset.scenario);
+        syncScenarioButtons();
+      });
+    });
+
+    els.refresh.addEventListener('click', onRefresh);
+    els.reRefresh.addEventListener('click', () => {
+      state.scenario = 'normal';
+      syncScenarioButtons();
+      onRefresh();
+    });
+
+    const params = new URLSearchParams(location.search);
+    const initial = params.get('state') || 'normal';
+    setScenario(initial);
+    syncScenarioButtons();
+  </script>
+</body>
+</html>
