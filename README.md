@@ -43,3 +43,17 @@ npx --yes serve prototype -p 4173
 ```
 
 页顶「评审态」工具栏仅用于设计评审与测试,正式前端实现时不包含该栏。
+
+## 北京天气预报页面（XMA-18）
+
+React 实现路径 `/weather`，对齐 `prototype/weather.html`（不含评审工具栏）。
+
+```bash
+npm run dev
+# 热点工作台 http://127.0.0.1:5173/
+# 北京天气   http://127.0.0.1:5173/weather
+# 验收场景   /weather?state=first-fail|refresh-fail|partial|first-load 等
+```
+
+- 接口 `GET /api/weather/beijing`：`dev` / `preview` 由 Vite 插件 mock，契约见 `docs/weather-api.md`
+- 环境变量 `VITE_WEATHER_API_URL` 可指向真实后端
