@@ -29,6 +29,15 @@ function scenarioForDemo(state: DemoWeatherState | null, isRefresh: boolean): We
   return "ok";
 }
 
+function initialFlagsForDemo(demoState: DemoWeatherState | null) {
+  return {
+    phase: (demoState === "first-load" ? "loading" : "idle") as Phase,
+    firstLoadFailed: false,
+    refreshFailed: demoState === "refresh-fail",
+    refreshOkBanner: demoState === "refresh-success",
+  };
+}
+
 function CurrentWeather({ data }: { data: BeijingWeatherDto }) {
   const timeStr = data.mockTime
     ? `模拟数据时间：${formatMockTime(data.mockTime)}`
@@ -95,17 +104,21 @@ function ForecastList({ forecast }: { forecast: BeijingWeatherDto["forecast"] })
 
 export function WeatherPage() {
   const [searchParams] = useSearchParams();
-  const demoState = useMemo(() => parseDemoState(searchParams.get("state")), [searchParams]);
+  const stateParam = searchParams.get("state");
+  const demoState = useMemo(() => parseDemoState(stateParam), [stateParam]);
 
   const [data, setData] = useState<BeijingWeatherDto | null>(null);
   const [lastGood, setLastGood] = useState<BeijingWeatherDto | null>(null);
   const [lastGoodTime, setLastGoodTime] = useState<string | null>(null);
-  const [phase, setPhase] = useState<Phase>(demoState === "first-load" ? "loading" : "idle");
+  const [phase, setPhase] = useState<Phase>(() => initialFlagsForDemo(demoState).phase);
   const [firstLoadFailed, setFirstLoadFailed] = useState(false);
-  const [refreshFailed, setRefreshFailed] = useState(demoState === "refresh-fail");
-  const [refreshOkBanner, setRefreshOkBanner] = useState(demoState === "refresh-success");
+  const [refreshFailed, setRefreshFailed] = useState(
+    () => initialFlagsForDemo(demoState).refreshFailed,
+  );
+  const [refreshOkBanner, setRefreshOkBanner] = useState(
+    () => initialFlagsForDemo(demoState).refreshOkBanner,
+  );
   const liveRef = useRef<HTMLParagraphElement>(null);
-  const booted = useRef(false);
 
   const announce = useCallback((msg: string) => {
     const el = liveRef.current;
@@ -115,6 +128,60 @@ export function WeatherPage() {
       el.textContent = msg;
     });
   }, []);
+
+  /** 同一路由仅改 ?state= 时按验收态重新初始化 */
+  useEffect(() => {
+    const flags = initialFlagsForDemo(demoState);
+    setData(null);
+    setLastGood(null);
+    setLastGoodTime(null);
+    setPhase(flags.phase);
+    setFirstLoadFailed(false);
+    setRefreshFailed(flags.refreshFailed);
+    setRefreshOkBanner(flags.refreshOkBanner);
+
+    if (demoState === "first-load") return undefined;
+
+    let cancelled = false;
+
+    const run = async () => {
+      if (
+        demoState === "refreshing" ||
+        demoState === "refresh-fail" ||
+        demoState === "refresh-success"
+      ) {
+        const seed = await fetchBeijingWeather("ok");
+        if (cancelled) return;
+        setData(seed);
+        setLastGood(seed);
+        setLastGoodTime(seed.mockTime);
+        if (demoState === "refreshing") setPhase("loading");
+        return;
+      }
+
+      setPhase("loading");
+      try {
+        const next = await fetchBeijingWeather(scenarioForDemo(demoState, false));
+        if (cancelled) return;
+        setData(next);
+        setLastGood(next);
+        setLastGoodTime(next.mockTime);
+        setPhase("idle");
+        announce("天气数据已加载");
+      } catch {
+        if (cancelled) return;
+        setData(null);
+        setFirstLoadFailed(true);
+        setPhase("idle");
+        announce("加载失败");
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [stateParam, demoState, announce]);
 
   const load = useCallback(
     async (opts: { isRefresh: boolean; forceOk?: boolean }) => {
@@ -143,11 +210,9 @@ export function WeatherPage() {
         setFirstLoadFailed(false);
         setRefreshFailed(false);
         setPhase("idle");
-        if (isRefresh && demoState === "refresh-success") {
+        if (isRefresh) {
           setRefreshOkBanner(true);
           announce("刷新成功");
-        } else if (isRefresh) {
-          announce("天气数据已刷新");
         } else {
           announce("天气数据已加载");
         }
@@ -169,26 +234,6 @@ export function WeatherPage() {
     [announce, data, demoState, lastGood, lastGoodTime],
   );
 
-  useEffect(() => {
-    if (booted.current) return;
-    booted.current = true;
-    if (demoState === "first-load") return;
-    if (
-      demoState === "refreshing" ||
-      demoState === "refresh-fail" ||
-      demoState === "refresh-success"
-    ) {
-      void fetchBeijingWeather("ok").then((seed) => {
-        setData(seed);
-        setLastGood(seed);
-        setLastGoodTime(seed.mockTime);
-        if (demoState === "refreshing") setPhase("loading");
-      });
-      return;
-    }
-    void load({ isRefresh: false });
-  }, [demoState, load]);
-
   const refreshing = phase === "loading" && !!lastGood;
   const initialLoading = phase === "loading" && !lastGood && !firstLoadFailed;
 
@@ -201,7 +246,7 @@ export function WeatherPage() {
   const refreshLabel = refreshing ? "刷新中…" : "刷新";
 
   return (
-    <>
+    <div className="weather-shell">
       <nav className="weather-top-nav" aria-label="应用导航">
         <Link to="/">热点工作台</Link>
         <Link to="/weather" aria-current="page">
@@ -264,7 +309,11 @@ export function WeatherPage() {
           ) : firstLoadFailed ? (
             <div className="empty-state">
               <p role="alert">天气加载失败，请重试</p>
-              <button type="button" className="btn-primary" onClick={() => void load({ isRefresh: false, forceOk: true })}>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void load({ isRefresh: false, forceOk: true })}
+              >
                 重试
               </button>
             </div>
@@ -300,6 +349,6 @@ export function WeatherPage() {
         <p className="disclaimer">仅用于协作演练，不作为真实天气决策依据</p>
         <p className="sr-only" ref={liveRef} aria-live="polite" aria-atomic="true" />
       </main>
-    </>
+    </div>
   );
 }
